@@ -24,8 +24,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-//@RequestMapping("/user-service")
-@RequestMapping("/")
+@RequestMapping("/user-service")
 public class UserController {
     private final UserService userService;
     private final Environment env;

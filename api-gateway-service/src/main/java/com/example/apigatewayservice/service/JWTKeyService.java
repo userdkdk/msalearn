@@ -31,7 +31,6 @@ public class JWTKeyService {
 
     private final JWSAlgorithm jwsAlgorithm = JWSAlgorithm.ES256;
     private JWSKeySelector<SecurityContext> publicJwsKeySelector;
-    private JWKSource<SecurityContext> privateJwkSource;
 
     public void loadKey() throws IOException {
         String publicKeyString = readFile("keys/ec256-public.pem");
