@@ -3,8 +3,12 @@ package com.example.userservice.jpa;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 
 @Entity(name = "users")
 @Getter
@@ -12,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class UserEntity {
+public class UserEntity implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -41,5 +45,20 @@ public class UserEntity {
     @PreUpdate
     void preUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
+
+    @Override
+    public String getPassword() {
+        return "";
+    }
+
+    @Override
+    public String getUsername() {
+        return "";
     }
 }

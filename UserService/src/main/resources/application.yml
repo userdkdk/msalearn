@@ -23,11 +23,11 @@ spring:
 eureka:
   instance:
     hostname: localhost
-    instance-id: ${spring.application.name}:${spring.application.instance_id}:${random.value}}
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
     prefer-ip-address: false
   client:
     service-url:
-      defaultZone: http://127.0.0.1:8761/eureka
+      defaultZone: http://127.0.0.1:8761/eureka/
     fetch-registry: true
     register-with-eureka: true
 
@@ -37,3 +37,5 @@ greeting:
 logging:
   level:
     org.springframework.security: DEBUG
+    org.springframework.cloud.loadbalancer: DEBUG
+    org.springframework.cloud.netflix.eureka: DEBUG

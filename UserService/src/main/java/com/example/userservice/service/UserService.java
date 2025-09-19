@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -84,5 +85,9 @@ public class UserService implements UserDetailsService {
                 .password(password)
                 .authorities(List.of()) // 권한이 필요하면 추가
                 .build();
+    }
+
+    public Optional<? extends UserDetails> loadUserById(int userId) {
+        return userRepository.findById(userId);
     }
 }

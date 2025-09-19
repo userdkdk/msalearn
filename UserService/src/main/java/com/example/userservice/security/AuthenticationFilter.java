@@ -14,11 +14,13 @@ import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.User;
@@ -36,9 +38,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final UserService userService;
     private Environment environment;
     private final JWTService jwtService;
-    private static final String JWT_ISSUER = "projdkdk";
-    private static final String CLAIM_TYPE = "type";
-    private static final String TYPE_ACCESS = "access";
 
     public AuthenticationFilter(UserService userService, Environment environment,
                                      JWTService jwtService,
@@ -52,7 +51,9 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         try {
+            log.info("start authenticate");
             RequestLogin creds = new ObjectMapper().readValue(request.getInputStream(), RequestLogin.class);
+            log.info("get authenticate");
             return getAuthenticationManager().authenticate(
                     new UsernamePasswordAuthenticationToken(
                             creds.getEmail(),
@@ -69,36 +70,29 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res,
                                             FilterChain chain, Authentication authResult) throws IOException, ServletException {
         log.info("success in");
-        int userId = Integer.parseInt(((User) authResult.getPrincipal()).getUsername());
+        var principal = (User) authResult.getPrincipal();
+        int userId = Integer.parseInt(principal.getUsername());
         UserDto userDetails = userService.getUserDetailsById(userId);
         log.info(String.valueOf(userDetails));
-        String token;
+        String token = null;
         try {
             token = jwtService.generateAccessToken(userDetails.getUserId());
-        } catch (JOSEException e) {
-            throw new RuntimeException(e);
-        }
-        ConfigurableJWTProcessor<SecurityContext> proc = jwtService.getJwtProcessor();
 
-        proc.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<>(
-                new JWTClaimsSet.Builder().issuer(JWT_ISSUER).build(),
-                new HashSet<>(Arrays.asList(
-                        JWTClaimNames.SUBJECT,
-                        JWTClaimNames.EXPIRATION_TIME))));
-        JWTClaimsSet claimsSet;
-        SecurityContext ctx = null;
-        try {
-            claimsSet = proc.process(token, ctx);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        } catch (BadJOSEException e) {
-            throw new RuntimeException(e);
+            Cookie cookie = new Cookie("PJT_TOKEN", token);
+            cookie.setHttpOnly(true);
+            cookie.setPath("/");
+            cookie.setMaxAge(60 * 60);
+            // 배포에선 samesite 켜기
+
+            res.addCookie(cookie);
+            log.info("Access token = {}", token);
+            res.setStatus(HttpServletResponse.SC_OK);
+            res.setContentType("application/json;charset=UTF-8");
+            res.getWriter().write("{\"message\":\"login success\"}");
+            res.getWriter().flush();
+
         } catch (JOSEException e) {
-            throw new RuntimeException(e);
+            unsuccessfulAuthentication(req, res, new InternalAuthenticationServiceException("JWT error", e));
         }
-//        claimsSet.equals()
-        log.info("token: "+claimsSet.toJSONObject().toString());
-        res.addHeader("token",token);
-        res.addHeader("userId",userDetails.getUserId());
     }
 }

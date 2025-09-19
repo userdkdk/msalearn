@@ -36,6 +36,9 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // cachebuilder 최신버전으로 올리기
+    implementation 'com.google.guava:guava:33.2.1-jre'
 }
 
 dependencyManagement {
