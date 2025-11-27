@@ -1,13 +1,10 @@
-package com.example.userservice.api;
+package com.example.userservice.dto.item;
 
-import lombok.*;
+import lombok.Data;
 
 import java.util.Date;
 
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
+@Data
 public class ResponseOrder {
     private String productId;
     private Integer qty;

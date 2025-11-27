@@ -1,9 +1,7 @@
 package com.example.orderservice.controller;
 
-import com.example.orderservice.api.RequestOrder;
-import com.example.orderservice.api.ResponseOrder;
-import com.example.orderservice.dto.OrderDto;
-import com.example.orderservice.dto.OrderMapper;
+import com.example.orderservice.dto.request.CreateOrderRequest;
+import com.example.orderservice.dto.response.OrderResponse;
 import com.example.orderservice.service.OrderService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,22 +17,19 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderController {
     OrderService orderService;
-    OrderMapper orderMapper;
 
     @PostMapping("/{userId}/orders")
-    public ResponseEntity<ResponseOrder> createOrder(@PathVariable("userId") String userId,
-                                                     @RequestBody RequestOrder requestOrder) {
+    public ResponseEntity<OrderResponse> createOrder(@PathVariable("userId") Integer userId,
+                                                     @RequestBody CreateOrderRequest createOrderRequest) {
         log.info("before order");
-        OrderDto dto = orderMapper.fromRequest(requestOrder);
-        dto.setUserId(userId);
-        ResponseOrder createOrder = orderService.createOrder(dto);
+        OrderResponse createOrder = orderService.createOrder(userId, createOrderRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createOrder);
     }
 
     @GetMapping("/{userId}/orders")
-    public ResponseEntity<List<ResponseOrder>> getOrder(@PathVariable("userId") String userId) {
+    public ResponseEntity<List<OrderResponse>> getOrder(@PathVariable("userId") Integer userId) {
         log.info("Before retrieve orders data");
-        List<ResponseOrder> res = orderService.getOrdersByUserId(userId);
+        List<OrderResponse> res = orderService.getOrdersByUserId(userId);
 
         log.info("Add retrieved orders data");
         return ResponseEntity.status(HttpStatus.OK).body(res);

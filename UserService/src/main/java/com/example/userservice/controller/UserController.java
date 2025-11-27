@@ -1,25 +1,21 @@
 package com.example.userservice.controller;
 
 import com.example.userservice.api.Greeting;
-import com.example.userservice.api.RequestUser;
-import com.example.userservice.api.ResponseUser;
-import com.example.userservice.dto.UserDto;
-import com.example.userservice.dto.UserMapper;
-import com.example.userservice.jpa.UserEntity;
-import com.example.userservice.jpa.UserRepository;
+import com.example.userservice.dto.item.LoginResult;
+import com.example.userservice.dto.request.CreateUserRequest;
+import com.example.userservice.domain.UserRepository;
+import com.example.userservice.dto.request.LoginRequest;
+import com.example.userservice.dto.response.LoginResponse;
+import com.example.userservice.dto.response.UserResponse;
 import com.example.userservice.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
-import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -29,9 +25,7 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
     private final Environment env;
-    private final UserRepository userRepository;
     private final Greeting greeting;
-    private final UserMapper userMapper;
 
     @GetMapping("/health-check") // http://localhost:60000/health-check
     public String status() {
@@ -50,25 +44,24 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<ResponseUser> createUser(@RequestBody RequestUser user) {
-
-        UserDto userDto = userMapper.fromRequest(user);
-        ResponseUser responseUser = userService.createUser(userDto);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseUser);
+    public ResponseEntity<Void> createUser(@RequestBody CreateUserRequest user) {
+        userService.createUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("/users")
-    public ResponseEntity<List<ResponseUser>> getUsers() {
-        List<ResponseUser> userList = userService.getUserByAll();
-
-        return ResponseEntity.status(HttpStatus.OK).body(userList);
+    @PostMapping("/login")
+    public ResponseEntity<Void> login(@RequestBody LoginRequest loginRequest) {
+        LoginResult loginResult = userService.login(loginRequest);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + loginResult.getToken());
+        return ResponseEntity.status(HttpStatus.OK).headers(headers)
+                .build();
     }
 
-    @GetMapping("/users/{userId}")
-    public ResponseEntity<ResponseUser> getUser(@PathVariable("userId") String userId) {
-        ResponseUser userDto = userService.getUserByUserId(userId);
-        return ResponseEntity.status(HttpStatus.OK).body(userDto);
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserResponse> getUser(@PathVariable Integer userId) {
+        UserResponse response = userService.getUser(userId);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
 }

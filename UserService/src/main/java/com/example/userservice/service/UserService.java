@@ -1,93 +1,72 @@
 package com.example.userservice.service;
 
-import com.example.userservice.api.ResponseOrder;
-import com.example.userservice.api.ResponseUser;
-import com.example.userservice.dto.UserDto;
-import com.example.userservice.dto.UserMapper;
-import com.example.userservice.jpa.UserEntity;
-import com.example.userservice.jpa.UserRepository;
+import com.example.userservice.dto.item.LoginResult;
+import com.example.userservice.dto.item.ResponseOrder;
+import com.example.userservice.dto.request.LoginRequest;
+import com.example.userservice.dto.response.UserResponse;
+import com.example.userservice.security.jwt.JwtTokenProvider;
+import com.example.userservice.security.password.PasswordEncoderPort;
+import com.example.userservice.dto.request.CreateUserRequest;
+import com.example.userservice.domain.User;
+import com.example.userservice.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
-import org.modelmapper.convention.MatchingStrategies;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class UserService implements UserDetailsService {
+@Transactional(readOnly = true)
+public class UserService {
     private final Environment env;
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
-    private final UserMapper userMapper;
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserEntity u = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("No user: " + username));
-
-        return createSpringSecurityUser(u.getId(), u.getPwd());
-    }
+    private final PasswordEncoderPort encoder;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RestTemplate restTemplate;
 
     @Transactional
-    public ResponseUser createUser(UserDto userDto) {
-        UserEntity userEntity = userMapper.toEntity(userDto);
-        userEntity.setPwd(passwordEncoder.encode(userDto.getPwd()));
-        userEntity.setUserId(UUID.randomUUID().toString());
-
-        UserEntity saved = userRepository.save(userEntity);
-        return userMapper.toResponse(saved);
-    }
-    public ResponseUser getUserByUserId(String userId) {
-        UserEntity userEntity = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("No user: " + userId));
-
-        if (userEntity == null)
-            throw new UsernameNotFoundException("User not found");
-
-        ResponseUser userDto = userMapper.toResponse(userEntity);
-
-        List<ResponseOrder> orderList = new ArrayList<>();
-        userDto.setOrders(orderList);
-
-        return userDto;
+    public void createUser(CreateUserRequest req) {
+        if (userRepository.existsByEmail(req.getEmail())) {
+            throw new CannotCreateTransactionException("email");
+        }
+        String hash = encoder.encode(req.getPassword());
+        User user = req.toEntity(hash);
+        userRepository.save(user);
     }
 
-    public List<ResponseUser> getUserByAll() {
-        List<UserEntity> entities = userRepository.findAll(); // JpaRepository 권장
-        return userMapper.toResponseList(entities);
+    public LoginResult login(LoginRequest loginRequest) {
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new CannotCreateTransactionException("email"));
+
+        // 비밀번호 검증
+        if (!encoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException();
+        }
+
+        // JWT 토큰 생성
+        String token = jwtTokenProvider.createAccessToken(String.valueOf(user.getId()));
+
+        return LoginResult.of(token);
     }
 
-    public UserDto getUserDetailsById(int id) {
-        UserEntity userEntity = userRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("No user: " + id));
 
-        UserDto userDto = userMapper.fromEntity(userEntity);
-        return userDto;
-    }
-
-    private UserDetails createSpringSecurityUser(Integer id, String password) {
-        return User.builder()
-                .username(String.valueOf(id))
-                .password(password)
-                .authorities(List.of()) // 권한이 필요하면 추가
-                .build();
-    }
-
-    public Optional<? extends UserDetails> loadUserById(int userId) {
-        return userRepository.findById(userId);
+    public UserResponse getUser(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CannotCreateTransactionException("userId"));
+        String orderUrl = String.format(env.getProperty("order-service.url"), userId);
+        ResponseEntity<List<ResponseOrder>> orderListResponse =
+                restTemplate.exchange(orderUrl, HttpMethod.GET,null,
+                        new ParameterizedTypeReference<List<ResponseOrder>>() {});
+        List<ResponseOrder> orderList = orderListResponse.getBody();
+        return UserResponse.of(user.getEmail(),user.getName(),user.getId(),orderList);
     }
 }

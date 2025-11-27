@@ -1,41 +1,5 @@
-server:
-  port: 0
-  address: 127.0.0.1
-
 spring:
-  config:
-    import: optional:file:./.env[.properties]
+  profiles:
+    active: local
   application:
     name: user-service
-  datasource:
-    url: ${MYSQL_USER_SERVICE_URL}
-    username: ${MYSQL_USER_SERVICE_USERNAME}
-    password: ${MYSQL_USER_SERVICE_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
-      defer-datasource-initialization: true
-
-
-eureka:
-  instance:
-    hostname: localhost
-    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
-    prefer-ip-address: false
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:8761/eureka/
-    fetch-registry: true
-    register-with-eureka: true
-
-greeting:
-  message: Welcome to the Simple E-commerce - 2nd.
-
-logging:
-  level:
-    org.springframework.security: DEBUG
-    org.springframework.cloud.loadbalancer: DEBUG
-    org.springframework.cloud.netflix.eureka: DEBUG

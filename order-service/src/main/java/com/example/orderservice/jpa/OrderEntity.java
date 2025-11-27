@@ -2,17 +2,14 @@ package com.example.orderservice.jpa;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity(name="orders")
 @Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,11 +25,25 @@ public class OrderEntity {
     private Integer totalPrice;
 
     @Column(nullable = false)
-    private String userId;
+    private Integer userId;
     @Column(nullable = false, unique = true)
     private String orderId;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    public OrderEntity(String productId, Integer qty, Integer unitPrice, Integer userId,
+                       String orderId) {
+        this.productId = productId;
+        this.qty = qty;
+        this.unitPrice = unitPrice;
+        this.userId = userId;
+        this.totalPrice = calculateSum(qty,unitPrice);
+        this.orderId = orderId;
+    }
+
+    private Integer calculateSum(Integer qty, Integer unitPrice) {
+        return qty * unitPrice;
+    }
 }
