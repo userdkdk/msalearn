@@ -1,5 +1,6 @@
 package com.example.userservice.service;
 
+import com.example.userservice.client.OrderServiceClient;
 import com.example.userservice.dto.item.LoginResult;
 import com.example.userservice.dto.item.ResponseOrder;
 import com.example.userservice.dto.request.LoginRequest;
@@ -9,6 +10,8 @@ import com.example.userservice.security.password.PasswordEncoderPort;
 import com.example.userservice.dto.request.CreateUserRequest;
 import com.example.userservice.domain.User;
 import com.example.userservice.domain.UserRepository;
+import com.example.userservice.service.dto.OrderResponse;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -32,6 +35,7 @@ public class UserService {
     private final PasswordEncoderPort encoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RestTemplate restTemplate;
+    private final OrderServiceClient orderServiceClient;
 
     @Transactional
     public void createUser(CreateUserRequest req) {
@@ -63,10 +67,17 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CannotCreateTransactionException("userId"));
         String orderUrl = String.format(env.getProperty("order-service.url"), userId);
-        ResponseEntity<List<ResponseOrder>> orderListResponse =
-                restTemplate.exchange(orderUrl, HttpMethod.GET,null,
-                        new ParameterizedTypeReference<List<ResponseOrder>>() {});
-        List<ResponseOrder> orderList = orderListResponse.getBody();
+//        ResponseEntity<List<OrderResponse>> orderListResponse =
+//                restTemplate.exchange(orderUrl, HttpMethod.GET,null,
+//                        new ParameterizedTypeReference<List<OrderResponse>>() {});
+//        List<OrderResponse> orderList = orderListResponse.getBody();
+        List<OrderResponse> orderList = null;
+        try {
+            orderList = orderServiceClient.getOrders(userId);
+        } catch (FeignException e) {
+            log.error(e.getMessage());
+        }
+
         return UserResponse.of(user.getEmail(),user.getName(),user.getId(),orderList);
     }
 }
