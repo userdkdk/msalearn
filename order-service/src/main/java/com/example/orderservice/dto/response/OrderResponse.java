@@ -1,6 +1,6 @@
 package com.example.orderservice.dto.response;
 
-import com.example.orderservice.jpa.OrderEntity;
+import com.example.orderservice.domain.OrderEntity;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 

@@ -2,15 +2,14 @@ package com.example.orderservice.service;
 
 import com.example.orderservice.dto.request.CreateOrderRequest;
 import com.example.orderservice.dto.response.OrderResponse;
-import com.example.orderservice.jpa.OrderEntity;
-import com.example.orderservice.jpa.OrderRepository;
+import com.example.orderservice.domain.OrderEntity;
+import com.example.orderservice.domain.OrderRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
