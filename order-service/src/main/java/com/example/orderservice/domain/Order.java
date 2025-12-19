@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OrderEntity {
+public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
@@ -33,14 +33,18 @@ public class OrderEntity {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public OrderEntity(String productId, Integer qty, Integer unitPrice, Integer userId,
-                       String orderId) {
+    private Order(String productId, Integer qty, Integer unitPrice, Integer userId,
+                 String orderId) {
         this.productId = productId;
         this.qty = qty;
         this.unitPrice = unitPrice;
         this.userId = userId;
         this.totalPrice = calculateSum(qty,unitPrice);
         this.orderId = orderId;
+    }
+    public static Order create(String productId, Integer qty, Integer unitPrice, Integer userId,
+                        String orderId) {
+        return new Order(productId, qty, unitPrice, userId, orderId);
     }
 
     private Integer calculateSum(Integer qty, Integer unitPrice) {

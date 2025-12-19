@@ -1,7 +1,6 @@
 package com.example.catalogservice.infrastructure;
 
-import com.example.catalogservice.domain.Catalog;
-import com.example.catalogservice.domain.CatalogRepository;
+import com.example.catalogservice.service.CatalogService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,7 +16,7 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 public class KafkaConsumer {
-    CatalogRepository catalogRepository;
+    private final CatalogService catalogService;
 
     @KafkaListener(topics = "example-catalog-topic")
     public void updateQty(String kafkaMessage) {
@@ -31,8 +30,6 @@ public class KafkaConsumer {
             ex.printStackTrace();
         }
 
-        Catalog catalog = catalogRepository.findByProductId((String) map.get("productId"))
-                .orElseThrow(()->new IllegalArgumentException());
-        catalog.decreaseStock((Integer) map.get("qyt"));
+        catalogService.decreaseStock((String) map.get("productId"), (Integer) map.get("qty"));
     }
 }

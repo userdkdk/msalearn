@@ -1,6 +1,6 @@
 package com.example.orderservice.dto.response;
 
-import com.example.orderservice.domain.OrderEntity;
+import com.example.orderservice.domain.Order;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
@@ -19,14 +19,14 @@ public class OrderResponse {
     private String orderId;
     private Integer userId;
 
-    public static OrderResponse of(OrderEntity orderEntity) {
+    public static OrderResponse of(Order order) {
         return OrderResponse.builder()
-                .productId(orderEntity.getProductId())
-                .qty(orderEntity.getQty())
-                .orderId(orderEntity.getOrderId())
-                .unitPrice(orderEntity.getUnitPrice())
-                .totalPrice(orderEntity.getTotalPrice())
-                .userId(orderEntity.getUserId())
+                .productId(order.getProductId())
+                .qty(order.getQty())
+                .orderId(order.getOrderId())
+                .unitPrice(order.getUnitPrice())
+                .totalPrice(order.getTotalPrice())
+                .userId(order.getUserId())
                 .build();
     }
 }

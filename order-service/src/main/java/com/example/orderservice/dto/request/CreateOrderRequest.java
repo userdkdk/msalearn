@@ -1,6 +1,6 @@
 package com.example.orderservice.dto.request;
 
-import com.example.orderservice.domain.OrderEntity;
+import com.example.orderservice.domain.Order;
 import lombok.*;
 
 @Getter
@@ -12,7 +12,8 @@ public class CreateOrderRequest {
     private Integer qty;
     private Integer unitPrice;
 
-    public OrderEntity toEntity(Integer userId, String orderId) {
-        return new OrderEntity(productId,qty,unitPrice,userId,orderId);
+    public Order toEntity(Integer userId, String orderId) {
+
+        return Order.create(productId,qty,unitPrice,userId,orderId);
     }
 }
