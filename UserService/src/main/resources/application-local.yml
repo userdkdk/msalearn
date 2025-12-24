@@ -1,6 +1,5 @@
 server:
-  port: 0
-  address: 127.0.0.1
+  port: 60000
 
 spring:
   datasource:
@@ -15,18 +14,6 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
       defer-datasource-initialization: true
 
-
-eureka:
-  instance:
-    hostname: localhost
-    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
-    prefer-ip-address: false
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:8761/eureka/
-    fetch-registry: true
-    register-with-eureka: true
-
 greeting:
   message: Welcome to the Simple E-commerce - 2nd.
 
@@ -37,8 +24,10 @@ logging:
     org.springframework.cloud.netflix.eureka: DEBUG
 
 token:
-  expiration-time: 86400000 #10 days
-  secret: ${JWT_SECRET_CODE}
+  expiration-time: ${TOKEN_EXPIRATION_TIME}
+  secret: ${TOKEN_SECRET}
 
-order-service:
-  url: http://localhost:8000/order-service/%s/orders
+order-service-url: ${ORDER-SERVICE-URL}
+
+gateway:
+  ip: ${GATEWAY_IP}

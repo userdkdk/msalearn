@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-deploy
+spec:
+  selector:
+    matchLabels:
+      app: catalog-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: catalog-app
+    spec:
+      containers:
+        - name: catalog-service
+          image: dkdkko/catalog-service:k8s_v1.6_temp
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1000Mi
+          env:
+            - name: BOOTSTRAP-SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-k8s-configmap
+                  key: bootstrap-servers
+            - name: MYSQL_CATALOG_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-k8s-configmap
+                  key: mysql_catalog_service_url
+            - name: MYSQL_CATALOG_SERVICE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-k8s-configmap
+                  key: mysql_catalog_service_username
+            - name: MYSQL_CATALOG_SERVICE_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-k8s-configmap
+                  key: mysql_catalog_service_password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-service
+spec:
+  type: NodePort
+  selector:
+    app: catalog-app
+  ports:
+    - protocol: TCP
+      port: 30001
+      targetPort: 30001
+      nodePort: 30003

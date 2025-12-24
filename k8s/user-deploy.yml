@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-deploy
+spec:
+  selector:
+    matchLabels:
+      app: user-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: user-app
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: user-service
+          image: dkdkko/user-service:k8s_v1.6_temp
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 60000
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1000Mi
+          env:
+            - name: GATEWAY_IP
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-k8s-configmap
+                  key: gateway_ip
+            - name: TOKEN_EXPIRATION_TIME
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-k8s-configmap
+                  key: token_expiration_time
+            - name: TOKEN_SECRET
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-k8s-configmap
+                  key: token_secret
+            - name: ORDER-SERVICE-URL
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-k8s-configmap
+                  key: order-service-url
+            - name: MYSQL_USER_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-k8s-configmap
+                  key: mysql_user_service_url
+            - name: MYSQL_USER_SERVICE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-k8s-configmap
+                  key: mysql_user_service_username
+            - name: MYSQL_USER_SERVICE_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: msa-k8s-configmap
+                  key: mysql_user_service_password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+spec:
+  type: NodePort
+  selector:
+    app: user-app
+  ports:
+    - protocol: TCP
+      port: 60000
+      targetPort: 60000
+      nodePort: 30001

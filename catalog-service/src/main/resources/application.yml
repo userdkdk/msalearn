@@ -1,9 +1,14 @@
 server:
-  port: 0
+  port: 30001
 
 spring:
   application:
     name: catalog-service
+  kafka:
+    consumer:
+      bootstrap-servers: ${BOOTSTRAP-SERVERS} # Kafka 클러스에 대한 초기 연결에 사용할 호스트 : 포트 목록
+      group-id: consumer_group01 # Group Id
+      auto-offset-reset: earliest
   datasource:
     url: ${MYSQL_CATALOG_SERVICE_URL}
     username: ${MYSQL_CATALOG_SERVICE_USERNAME}
@@ -15,17 +20,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
       defer-datasource-initialization: true
-
-eureka:
-  instance:
-    hostname: localhost
-    instance-id: ${spring.application.name}:${spring.application.instance_id}:${random.value}}
-    prefer-ip-address: false
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:8761/eureka
-    fetch-registry: true
-    register-with-eureka: true
 
 logging:
   level:

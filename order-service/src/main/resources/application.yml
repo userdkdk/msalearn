@@ -1,9 +1,12 @@
 server:
-  port: 0
+  port: 10000
 
 spring:
   application:
     name: order-service
+  kafka:
+    producer:
+      bootstrap-servers: ${BOOTSTRAP-SERVERS}
   datasource:
     url: ${MYSQL_ORDER_SERVICE_URL}
     username: ${MYSQL_ORDER_SERVICE_USERNAME}
@@ -15,17 +18,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
       defer-datasource-initialization: true
-
-eureka:
-  instance:
-    hostname: localhost
-    instance-id: ${spring.application.name}:${spring.application.instance_id}:${random.value}}
-    prefer-ip-address: false
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:8761/eureka
-    fetch-registry: true
-    register-with-eureka: true
 
 logging:
   level:
